@@ -1,0 +1,1235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="description" content="A 60-second combo-tapping sprint from Stage 8 to Stage Zero.">
+<meta name="theme-color" content="#05070d">
+<title>Loadbreaker</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap">
+<style>
+  :root{
+    --void:#05070d;
+    --dusk:#0e1626;
+    --dawn:#1b2740;
+    --dawn-2:#243252;
+    --gold:#f2a93b;
+    --gold-bright:#ffd166;
+    --circuit:#35d6c4;
+    --alert:#e8543e;
+    --mist:#b9c2d6;
+    --paper:#edf1f8;
+    --line:rgba(185,194,214,0.14);
+    --shadow:rgba(0,0,0,0.45);
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--void);
+    color:var(--paper);
+    font-family:"Public Sans",system-ui,sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:0;
+    -webkit-font-smoothing:antialiased;
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:0.001ms !important;animation-iteration-count:1 !important;transition-duration:0.001ms !important;}
+  }
+  h1,h2,h3{font-family:"Big Shoulders Display",sans-serif;text-wrap:balance;margin:0;}
+  .num{font-family:"JetBrains Mono",monospace;font-variant-numeric:tabular-nums;}
+  button{font-family:inherit;}
+
+  #app{
+    width:100%;
+    max-width:480px;
+    min-height:100vh;
+    background:linear-gradient(180deg,var(--dusk),var(--void) 60%);
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    box-shadow:0 0 80px var(--shadow);
+    overflow-x:hidden;
+  }
+
+  /* ---------- header ---------- */
+  header{
+    padding:14px 16px 10px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    border-bottom:1px solid var(--line);
+    position:sticky;
+    top:0;
+    background:rgba(5,7,13,0.86);
+    backdrop-filter:blur(6px);
+    z-index:20;
+  }
+  .brand-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .brand{display:flex;align-items:baseline;gap:8px;}
+  .brand h1{font-size:1.4rem;font-weight:900;letter-spacing:0.01em;color:var(--paper);}
+  .brand small{font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--circuit);font-weight:600;}
+  .icon-btn{
+    background:var(--dawn);
+    border:1px solid var(--line);
+    color:var(--mist);
+    border-radius:10px;
+    width:32px;height:32px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:0.9rem;
+    cursor:pointer;
+    flex:none;
+  }
+  .icon-btn:hover{color:var(--paper);border-color:var(--circuit);}
+  .icon-btn:focus-visible, button:focus-visible, input:focus-visible{outline:2px solid var(--circuit);outline-offset:2px;}
+  .header-actions{display:flex;gap:6px;}
+
+  .stage-row{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+  .stage-pill{
+    display:inline-flex;align-items:center;gap:7px;
+    padding:5px 12px 6px;
+    border-radius:999px;
+    font-family:"Big Shoulders Display",sans-serif;
+    font-weight:800;
+    font-size:0.88rem;
+    letter-spacing:0.02em;
+    border:1px solid transparent;
+    white-space:nowrap;
+  }
+  .stage-dot{width:8px;height:8px;border-radius:50%;flex:none;}
+  .stat-cluster{display:flex;gap:12px;}
+  .stat{text-align:right;}
+  .stat .label{font-size:0.56rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--mist);opacity:0.75;}
+  .stat .val{font-size:0.92rem;font-weight:600;color:var(--paper);}
+  .stat .val.gold{color:var(--gold-bright);}
+  .stat .val.hot{color:var(--alert);}
+
+  .progress-track{
+    height:6px;border-radius:999px;background:rgba(185,194,214,0.12);overflow:hidden;
+  }
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--circuit),var(--gold-bright));border-radius:999px;transition:width 0.3s ease;}
+  .progress-label{display:flex;justify-content:space-between;font-size:0.62rem;color:var(--mist);opacity:0.75;letter-spacing:0.02em;}
+
+  /* ---------- scene / tap zone ---------- */
+  .scene-wrap{position:relative;padding:16px 16px 4px;}
+  .scene{
+    position:relative;
+    border-radius:var(--radius);
+    overflow:hidden;
+    border:1px solid var(--line);
+    background:var(--dusk);
+    aspect-ratio:16/10;
+    transition:box-shadow 0.2s ease;
+  }
+  .scene.overdrive{box-shadow:0 0 0 2px var(--gold-bright),0 0 26px rgba(255,209,102,0.5);}
+  .scene svg{display:block;width:100%;height:100%;}
+  .particle{
+    position:absolute;
+    font-family:"JetBrains Mono",monospace;
+    font-weight:700;
+    color:var(--gold-bright);
+    pointer-events:none;
+    animation:rise 900ms ease-out forwards;
+    text-shadow:0 0 8px rgba(255,209,102,0.6);
+  }
+  @keyframes rise{
+    0%{transform:translateY(0) scale(1);opacity:1;}
+    100%{transform:translateY(-50px) scale(1.05);opacity:0;}
+  }
+  .tap-target{cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;}
+  .tap-target:active svg{filter:brightness(1.15);}
+
+  .start-veil{
+    position:absolute;inset:0;background:rgba(5,7,13,0.72);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+    text-align:center;padding:20px;z-index:5;
+  }
+  .start-veil.hidden{display:none;}
+  .start-veil h2{font-size:1.5rem;font-weight:900;}
+  .start-veil p{font-size:0.78rem;color:var(--mist);max-width:300px;margin:0;}
+  .start-btn{
+    margin-top:8px;
+    background:var(--gold);color:#241202;border:none;border-radius:12px;
+    padding:13px 26px;font-weight:800;font-size:1rem;cursor:pointer;
+    box-shadow:0 6px 20px rgba(242,169,59,0.35);
+  }
+  .start-btn:active{transform:scale(0.97);}
+  .best-line{font-size:0.68rem;color:var(--circuit);margin-top:2px;}
+
+  /* ---------- combo / heat meter ---------- */
+  .combo-wrap{padding:10px 2px 0;}
+  .combo-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;}
+  .combo-head .lbl{font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--mist);opacity:0.75;}
+  .combo-mult{font-family:"Big Shoulders Display",sans-serif;font-weight:900;font-size:1.15rem;color:var(--gold-bright);transition:color 0.15s ease;}
+  .combo-mult.max{color:var(--alert);}
+  .heat-track{height:12px;border-radius:999px;background:rgba(185,194,214,0.1);overflow:hidden;border:1px solid var(--line);}
+  .heat-fill{height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,#3d6bff,var(--circuit) 40%,var(--gold-bright) 75%,var(--alert));transition:width 0.08s linear;}
+  .run-stats{display:flex;justify-content:space-between;font-size:0.66rem;color:var(--mist);opacity:0.7;margin-top:5px;}
+
+  /* ---------- shop ---------- */
+  .shop{padding:12px 16px 100px;display:flex;flex-direction:column;gap:8px;flex:1;}
+  .shop-head{display:flex;align-items:baseline;justify-content:space-between;margin:4px 2px 2px;}
+  .shop-head h2{font-size:0.95rem;font-weight:800;color:var(--mist);letter-spacing:0.02em;text-transform:uppercase;}
+  .shop-head span{font-size:0.66rem;color:var(--mist);opacity:0.6;}
+  .item{
+    display:flex;align-items:center;gap:12px;
+    background:var(--dusk);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:10px 12px;
+    transition:opacity 0.2s ease;
+  }
+  .item.affordable{border-color:rgba(53,214,196,0.35);}
+  .item.locked{opacity:0.45;}
+  .item-icon{
+    width:40px;height:40px;border-radius:10px;flex:none;
+    background:var(--dawn);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .item-icon svg{width:21px;height:21px;}
+  .item-body{flex:1;min-width:0;}
+  .item-name-row{display:flex;align-items:center;gap:7px;}
+  .item-name{font-weight:700;font-size:0.88rem;color:var(--paper);}
+  .item-owned{
+    font-family:"JetBrains Mono",monospace;font-size:0.66rem;color:var(--circuit);
+    background:rgba(53,214,196,0.12);border-radius:6px;padding:1px 6px;
+  }
+  .item-blurb{font-size:0.7rem;color:var(--mist);opacity:0.8;margin-top:2px;line-height:1.35;}
+  .item-cps{font-size:0.66rem;color:var(--mist);opacity:0.6;margin-top:3px;}
+  .buy-btn{
+    flex:none;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:1px;
+    background:var(--gold);
+    color:#241202;
+    border:none;
+    border-radius:10px;
+    padding:8px 12px;
+    font-weight:700;
+    font-size:0.7rem;
+    min-width:72px;
+    cursor:pointer;
+    transition:transform 0.1s ease,filter 0.15s ease;
+  }
+  .buy-btn:active{transform:scale(0.96);}
+  .buy-btn:disabled{background:var(--dawn-2);color:var(--mist);opacity:0.55;cursor:not-allowed;}
+  .buy-btn .cost{font-family:"JetBrains Mono",monospace;font-size:0.76rem;}
+
+  /* ---------- bottom bar ---------- */
+  .bottom-bar{
+    position:sticky;bottom:0;
+    display:flex;gap:8px;
+    padding:10px 16px calc(12px + env(safe-area-inset-bottom));
+    background:linear-gradient(180deg,rgba(5,7,13,0),rgba(5,7,13,0.95) 30%);
+    z-index:15;
+  }
+  .bottom-bar.hidden{display:none;}
+  .cta{
+    flex:1;
+    border:none;border-radius:12px;
+    padding:12px 10px;
+    font-weight:700;font-size:0.8rem;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:6px;
+  }
+  .cta.primary{background:var(--circuit);color:#04231f;}
+  .cta.ghost{background:var(--dawn);color:var(--paper);border:1px solid var(--line);}
+
+  /* ---------- modals ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(3,5,10,0.72);
+    display:flex;align-items:center;justify-content:center;
+    padding:20px;z-index:100;
+    opacity:0;pointer-events:none;transition:opacity 0.2s ease;
+  }
+  .overlay.is-open{opacity:1;pointer-events:auto;}
+  .modal{
+    background:var(--dusk);
+    border:1px solid var(--line);
+    border-radius:18px;
+    width:100%;max-width:400px;
+    padding:22px 20px;
+    max-height:86vh;overflow-y:auto;
+    transform:translateY(8px);
+    transition:transform 0.2s ease;
+  }
+  .overlay.is-open .modal{transform:translateY(0);}
+  .modal h3{font-size:1.25rem;font-weight:900;margin-bottom:8px;}
+  .modal p{font-size:0.85rem;line-height:1.5;color:var(--mist);margin:0 0 14px;}
+  .modal .close-row{display:flex;justify-content:flex-end;margin-bottom:6px;}
+  .modal-actions{display:flex;gap:8px;margin-top:12px;}
+  .field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+  .field label{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--mist);}
+  .field input,.field select{
+    background:var(--void);border:1px solid var(--line);border-radius:9px;
+    color:var(--paper);padding:10px 11px;font-size:0.88rem;font-family:inherit;
+  }
+  .field input:focus,.field select:focus{border-color:var(--circuit);}
+  .field.error input{border-color:var(--alert);}
+  .field-error{font-size:0.68rem;color:var(--alert);min-height:0;}
+
+  .lb-row{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--line);}
+  .lb-rank{font-family:"JetBrains Mono",monospace;font-weight:700;color:var(--mist);width:22px;flex:none;}
+  .lb-rank.top{color:var(--gold-bright);}
+  .lb-initials{font-family:"Big Shoulders Display",sans-serif;font-weight:800;letter-spacing:0.06em;flex:1;}
+  .lb-score{font-family:"JetBrains Mono",monospace;color:var(--circuit);font-size:0.8rem;text-align:right;}
+  .lb-empty{text-align:center;color:var(--mist);opacity:0.7;font-size:0.82rem;padding:18px 0;}
+
+  .fact-toast{
+    display:inline-block;font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase;
+    color:var(--gold-bright);background:rgba(242,169,59,0.12);border-radius:6px;padding:3px 8px;margin-bottom:6px;
+  }
+  .toast-stack{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:8px;width:min(92vw,440px);pointer-events:none;}
+  .toast{
+    background:var(--dawn);border:1px solid var(--line);border-radius:11px;
+    padding:9px 14px;font-size:0.78rem;color:var(--paper);box-shadow:0 8px 24px var(--shadow);
+    animation:toast-in 0.25s ease;
+  }
+  .toast strong{color:var(--gold-bright);}
+  @keyframes toast-in{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+
+  .confirm-card{text-align:center;padding:6px 0 4px;}
+  .confirm-card .big{font-size:2.3rem;margin-bottom:4px;}
+  .result-stats{
+    display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0;
+  }
+  .result-stat{background:var(--void);border:1px solid var(--line);border-radius:10px;padding:9px 10px;text-align:center;}
+  .result-stat .rv{font-family:"JetBrains Mono",monospace;font-weight:700;font-size:1rem;color:var(--gold-bright);}
+  .result-stat .rl{font-size:0.6rem;color:var(--mist);text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;}
+  .snapshot{
+    background:var(--void);border:1px dashed var(--line);border-radius:12px;padding:14px;margin:14px 0;
+    font-family:"JetBrains Mono",monospace;font-size:0.76rem;color:var(--circuit);line-height:1.6;text-align:left;
+    white-space:pre-wrap;
+  }
+  .segmented{display:flex;gap:6px;flex-wrap:wrap;}
+  .segmented button{
+    flex:1;min-width:64px;background:var(--void);border:1px solid var(--line);color:var(--mist);
+    border-radius:9px;padding:8px 6px;font-size:0.72rem;cursor:pointer;
+  }
+  .segmented button.selected{border-color:var(--circuit);color:var(--paper);background:rgba(53,214,196,0.1);}
+  .muted-link{background:none;border:none;color:var(--mist);font-size:0.72rem;text-decoration:underline;cursor:pointer;padding:0;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="toast-stack" id="toastStack"></div>
+
+  <header>
+    <div class="brand-row">
+      <div class="brand">
+        <h1>Loadbreaker</h1>
+        <small>60-second power surge</small>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="soundBtn" title="Toggle sound" aria-label="Toggle sound">🔊</button>
+        <button class="icon-btn" id="shareBtn" title="Share" aria-label="Share">↗</button>
+        <button class="icon-btn" id="lbBtn" title="Leaderboard" aria-label="Leaderboard">🏆</button>
+        <button class="icon-btn" id="menuBtn" title="More" aria-label="More options">⋯</button>
+      </div>
+    </div>
+    <div class="stage-row">
+      <span class="stage-pill" id="stagePill"><span class="stage-dot" id="stageDot"></span><span id="stageLabel">Stage 8</span></span>
+      <div class="stat-cluster">
+        <div class="stat"><div class="label">Time</div><div class="val num" id="timeVal">1:00</div></div>
+        <div class="stat"><div class="label">Combo</div><div class="val num gold" id="comboVal">×1.0</div></div>
+        <div class="stat"><div class="label">Energy</div><div class="val num" id="balVal">0</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="progress-track"><div class="progress-fill" id="stageProgress" style="width:0%"></div></div>
+      <div class="progress-label"><span id="progressText">0 / 60 kWh to Stage 7</span></div>
+    </div>
+  </header>
+
+  <div class="scene-wrap">
+    <div class="scene tap-target" id="tapTarget" role="button" tabindex="0" aria-label="Tap to generate energy">
+      <svg id="sceneSvg" viewBox="0 0 400 250" preserveAspectRatio="xMidYMax slice"></svg>
+      <div class="start-veil" id="startVeil">
+        <h2 id="startHeadline">Stage 8 to Stage Zero</h2>
+        <p>Tap as fast as you can to fill your combo meter — the faster you tap, the more every hit is worth. One 60-second run. Buildings help, speed wins.</p>
+        <div class="best-line" id="bestLine"></div>
+        <button class="start-btn" id="startBtn">▶ Start the surge</button>
+      </div>
+    </div>
+    <div class="combo-wrap">
+      <div class="combo-head"><span class="lbl">Combo heat</span><span class="combo-mult" id="comboMultDisplay">×1.0</span></div>
+      <div class="heat-track"><div class="heat-fill" id="heatFill"></div></div>
+      <div class="run-stats"><span id="tapsStat">0 taps</span><span id="bestComboStat">best ×1.0</span></div>
+    </div>
+  </div>
+
+  <div class="shop" id="shop">
+    <div class="shop-head"><h2>Spend while you tap</h2><span>costs rise per unit</span></div>
+    <div id="itemList"></div>
+  </div>
+
+  <div class="bottom-bar" id="bottomBar">
+    <button class="cta primary" id="mainCta">▶ Start the surge</button>
+    <button class="cta ghost" id="leadBtn">⚡ Get my real savings estimate</button>
+  </div>
+</div>
+
+<!-- Round over modal -->
+<div class="overlay" id="resultOverlay">
+  <div class="modal">
+    <div class="close-row"><button class="icon-btn" data-close="resultOverlay">✕</button></div>
+    <div class="confirm-card">
+      <div class="big" id="resultEmoji">⏱️</div>
+      <h3 id="resultTitle">Time's up</h3>
+      <p id="resultBody"></p>
+    </div>
+    <div class="result-stats">
+      <div class="result-stat"><div class="rv num" id="rvLifetime">0</div><div class="rl">kWh generated</div></div>
+      <div class="result-stat"><div class="rv num" id="rvCombo">×1.0</div><div class="rl">best combo</div></div>
+      <div class="result-stat"><div class="rv num" id="rvTaps">0</div><div class="rl">taps</div></div>
+      <div class="result-stat"><div class="rv num" id="rvStage">6</div><div class="rl">stage reached</div></div>
+    </div>
+    <div class="modal-actions"><button class="cta ghost" id="resultToLeaderboard" style="width:100%">Submit to the grid leaderboard 🏆</button></div>
+    <div class="modal-actions"><button class="cta primary" id="resultToLead" style="width:100%">See what this looks like at home ⚡</button></div>
+    <div class="modal-actions"><button class="cta ghost" id="resultAgain" style="width:100%">▶ Play again</button></div>
+  </div>
+</div>
+
+<!-- Leaderboard modal -->
+<div class="overlay" id="lbOverlay">
+  <div class="modal">
+    <div class="close-row"><button class="icon-btn" data-close="lbOverlay">✕</button></div>
+    <h3>Grid Leaderboard</h3>
+    <p>Fastest routes to Stage Zero, shared across every player of this build.</p>
+    <div id="lbList"></div>
+    <div class="modal-actions" id="lbSubmitRow" style="display:none">
+      <button class="cta primary" id="lbSubmitBtn" style="width:100%">Submit my run</button>
+    </div>
+    <div id="lbSubmitForm" style="display:none">
+      <div class="field">
+        <label for="initialsInput">Your initials (3 letters)</label>
+        <input id="initialsInput" maxlength="3" placeholder="ACE" autocomplete="off">
+      </div>
+      <div class="modal-actions">
+        <button class="cta primary" id="lbConfirmBtn" style="width:100%">Lock it in</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Lead capture modal -->
+<div class="overlay" id="leadOverlay">
+  <div class="modal">
+    <div class="close-row"><button class="icon-btn" data-close="leadOverlay">✕</button></div>
+    <div id="leadFormWrap">
+      <h3>Get your real savings estimate</h3>
+      <p>You've been playing with pretend panels. Tell us about your actual roof and a Stage Zero energy advisor will follow up with real numbers.</p>
+      <div class="field" id="nameField">
+        <label for="leadName">Name</label>
+        <input id="leadName" placeholder="Your name" autocomplete="name">
+        <div class="field-error"></div>
+      </div>
+      <div class="field" id="emailField">
+        <label for="leadEmail">Email</label>
+        <input id="leadEmail" placeholder="you@example.com" autocomplete="email" inputmode="email">
+        <div class="field-error"></div>
+      </div>
+      <div class="field">
+        <label for="leadSuburb">Suburb / town</label>
+        <input id="leadSuburb" placeholder="Where's the roof?" autocomplete="address-level2">
+      </div>
+      <div class="field">
+        <label>Monthly electricity bill</label>
+        <div class="segmented" id="billSeg">
+          <button type="button" data-val="Under R1,500">Under R1.5k</button>
+          <button type="button" data-val="R1,500–R3,000">R1.5k–3k</button>
+          <button type="button" data-val="R3,000–R6,000">R3k–6k</button>
+          <button type="button" data-val="Over R6,000">Over R6k</button>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="cta primary" id="leadSubmitBtn" style="width:100%">Send my details</button>
+      </div>
+    </div>
+    <div id="leadConfirmWrap" style="display:none">
+      <div class="confirm-card">
+        <div class="big">✅</div>
+        <h3>Got it.</h3>
+        <p>Thanks<span id="leadThanksName"></span> — someone from Stage Zero will reach out about your roof in <span id="leadThanksSuburb"></span>. Here's your run to keep.</p>
+      </div>
+      <div class="snapshot" id="leadSnapshot"></div>
+      <div class="modal-actions">
+        <button class="cta primary" id="leadDownloadBtn" style="width:100%">⬇ Save snapshot</button>
+      </div>
+      <div class="modal-actions"><button class="cta ghost" data-close="leadOverlay" style="width:100%">Back to the game</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- Menu modal -->
+<div class="overlay" id="menuOverlay">
+  <div class="modal">
+    <div class="close-row"><button class="icon-btn" data-close="menuOverlay">✕</button></div>
+    <h3>Loadbreaker</h3>
+    <p>A concept prototype for the Stage Zero Game App Challenge. A 60-second, skill-based sprint to Stage Zero, a shared leaderboard, and a working lead-capture flow — ready to skin with real branding.</p>
+    <div class="modal-actions"><button class="muted-link" id="resetBtn">Clear my personal best &amp; saved details</button></div>
+  </div>
+</div>
+
+<script id="leaderboard-data" type="application/json">[]</script>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- config ---------------- */
+  var ROUND_SECONDS = 60;
+  var HEAT_MAX = 100;
+  var HEAT_PER_TAP_BASE = 10;
+  var HEAT_DECAY_BASE = 38; // per second
+  var MAX_MULT = 12;
+
+  var STAGES = [
+    {n:8, threshold:0},
+    {n:7, threshold:60},
+    {n:6, threshold:200},
+    {n:5, threshold:600},
+    {n:4, threshold:1500},
+    {n:3, threshold:3200},
+    {n:2, threshold:5500},
+    {n:1, threshold:8000},
+    {n:0, threshold:11000}
+  ];
+  var MAX_STAGE_N = STAGES[0].n;
+  var FACTS = {
+    7:"Stage 8 was the reality for parts of South Africa in 2023 — over twelve hours a day without grid power. Every rung down from there is hours of your day back.",
+    6:"By Stage 6, outages stack on top of each other for most of the day. A home generating its own power stops noticing which stage it technically is.",
+    5:"Rolling blackouts don't ask what you were doing — cooking, working, keeping the fridge cold. Solar and storage mean the schedule stops being your problem.",
+    4:"A home with rooftop solar generates power exactly when the grid struggles most: hot, sunny afternoons.",
+    3:"Batteries turn daytime sun into night-time power — the difference between 'solar' and 'never running out.'",
+    2:"Every panel you add is capacity the grid doesn't have to supply. Multiply that by a street and the whole neighbourhood gets steadier power.",
+    1:"This is the tipping point — at this scale, most homes generate more than they use on an average day.",
+    0:"Stage 0 isn't a load-shedding stage at all. It's the schedule when there's nothing to shed. That's the whole idea."
+  };
+  var BUILDINGS = [
+    {id:"panel", name:"Solar Panel", cost:4, cps:0.4, blurb:"Residential solar generation, one panel at a time."},
+    {id:"battery", name:"Battery", cost:60, cps:2.5, heatBonus:2.5, blurb:"Home battery storage that fires the instant you tap — charges your combo faster."},
+    {id:"substation", name:"Battery Backup", cost:900, cps:25, decayMult:0.9, blurb:"Extended-coverage backup that keeps your combo alive between taps."},
+    {id:"fixed", name:"Fixed Backup System", cost:3000, cps:90, tapBonus:2, blurb:"Permanent whole-home installation. Boosts every tap, not just your combo."}
+  ];
+  var COST_MULT = 1.13;
+  var META_KEY = "loadbreaker-meta-v2";
+  var LEADS_KEY = "loadbreaker-leads";
+
+  /* ---------------- meta (persists across rounds) ---------------- */
+  var meta = { muted:false, personalBest:null, leadDone:false };
+  function loadMeta(){
+    try{
+      var raw = localStorage.getItem(META_KEY);
+      if(raw) Object.assign(meta, JSON.parse(raw));
+    }catch(e){}
+  }
+  function saveMeta(){
+    try{ localStorage.setItem(META_KEY, JSON.stringify(meta)); }catch(e){}
+  }
+
+  /* ---------------- round state (fresh each run) ---------------- */
+  var owned = {};
+  var run = {
+    energy:0, lifetime:0, heat:0, running:false, ended:false,
+    timeLeft: ROUND_SECONDS, taps:0, bestCombo:1, seenStages:{},
+    reachedZero:false, timeUsedAtZero:0, canSubmit:false
+  };
+  function resetRun(){
+    BUILDINGS.forEach(function(b){ owned[b.id] = 0; });
+    run = {
+      energy:0, lifetime:0, heat:0, running:false, ended:false,
+      timeLeft: ROUND_SECONDS, taps:0, bestCombo:1, seenStages:{},
+      reachedZero:false, timeUsedAtZero:0, canSubmit:false
+    };
+  }
+  resetRun();
+
+  /* ---------------- derived ---------------- */
+  function buildingCost(b){
+    return Math.ceil(b.cost * Math.pow(COST_MULT, owned[b.id]));
+  }
+  function totalCps(){
+    var sum = 0;
+    BUILDINGS.forEach(function(b){ sum += b.cps * owned[b.id]; });
+    return sum;
+  }
+  function totalOwned(){
+    var sum = 0;
+    BUILDINGS.forEach(function(b){ sum += owned[b.id]; });
+    return sum;
+  }
+  function heatPerTap(){
+    return HEAT_PER_TAP_BASE + owned.battery * 2.5;
+  }
+  function heatDecayRate(){
+    return HEAT_DECAY_BASE * Math.max(0.35, Math.pow(0.9, owned.substation));
+  }
+  function currentMultiplier(){
+    return 1 + (run.heat / HEAT_MAX) * (MAX_MULT - 1);
+  }
+  function baseTap(){
+    return 1 + Math.floor(totalOwned() / 3) + owned.fixed * 2;
+  }
+  function currentStageIndex(){
+    var idx = 0;
+    for(var i=0;i<STAGES.length;i++){
+      if(run.lifetime >= STAGES[i].threshold) idx = i;
+    }
+    return idx;
+  }
+  function nextStageInfo(){
+    var idx = currentStageIndex();
+    if(idx < STAGES.length - 1) return STAGES[idx+1];
+    return null;
+  }
+
+  function formatNum(n){
+    if(n === undefined || n === null || isNaN(n)) return "0";
+    var neg = n < 0; n = Math.abs(n);
+    if(n < 1000) return (neg?"-":"") + (Math.round(n*10)/10).toString();
+    var units = ["", "K", "M", "B"];
+    var u = 0;
+    while(n >= 1000 && u < units.length-1){ n /= 1000; u++; }
+    return (neg?"-":"") + n.toFixed(n < 10 ? 2 : n < 100 ? 1 : 0) + units[u];
+  }
+  function formatTime(sec){
+    sec = Math.max(0, Math.ceil(sec));
+    var m = Math.floor(sec/60), s = sec % 60;
+    return m + ":" + (s < 10 ? "0"+s : s);
+  }
+
+  /* ---------------- toasts ---------------- */
+  function toast(msg, ms){
+    var stack = document.getElementById("toastStack");
+    var el = document.createElement("div");
+    el.className = "toast";
+    el.innerHTML = msg;
+    stack.appendChild(el);
+    setTimeout(function(){ el.remove(); }, ms || 3800);
+  }
+
+  /* ---------------- modals ---------------- */
+  function openModal(id){ document.getElementById(id).classList.add("is-open"); }
+  function closeModal(id){ document.getElementById(id).classList.remove("is-open"); }
+  document.querySelectorAll("[data-close]").forEach(function(btn){
+    btn.addEventListener("click", function(){ closeModal(btn.getAttribute("data-close")); });
+  });
+  document.querySelectorAll(".overlay").forEach(function(ov){
+    ov.addEventListener("click", function(e){ if(e.target === ov) ov.classList.remove("is-open"); });
+  });
+
+  /* ---------------- sound ---------------- */
+  var audioCtx = null;
+  function blip(freq, gain){
+    if(meta.muted) return;
+    try{
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      var o = audioCtx.createOscillator();
+      var g = audioCtx.createGain();
+      o.type = "sine";
+      o.frequency.value = freq || 660;
+      g.gain.value = gain || 0.045;
+      o.connect(g); g.connect(audioCtx.destination);
+      g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.16);
+      o.start(); o.stop(audioCtx.currentTime + 0.17);
+    }catch(e){}
+  }
+  document.getElementById("soundBtn").addEventListener("click", function(){
+    meta.muted = !meta.muted;
+    this.textContent = meta.muted ? "🔇" : "🔊";
+    saveMeta();
+  });
+
+  /* ---------------- scene rendering ---------------- */
+  var svgNS = "http://www.w3.org/2000/svg";
+  var sceneSvg = document.getElementById("sceneSvg");
+  var STAGE_SKY = {
+    8:["#020309","#070a12"], 7:["#03040c","#0a0e19"],
+    6:["#05070d","#0e1626"], 5:["#0a0f1f","#151f36"], 4:["#0f1730","#1c2946"],
+    3:["#16203f","#233459"], 2:["#20305a","#33487c"], 1:["#3a3c6e","#5a5187"],
+    0:["#5e4a86","#c9873e"]
+  };
+  var buildingDefs = [
+    {x:14, w:34, h:70, windows:3},
+    {x:56, w:46, h:100, windows:4},
+    {x:112, w:30, h:56, windows:2},
+    {x:230, w:40, h:88, windows:4},
+    {x:280, w:52, h:112, windows:5},
+    {x:342, w:34, h:64, windows:3}
+  ];
+  var totalWindows = buildingDefs.reduce(function(s,b){return s+b.windows;},0);
+
+  function el(tag, attrs){
+    var e = document.createElementNS(svgNS, tag);
+    for(var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  function buildScene(){
+    sceneSvg.innerHTML = "";
+    sceneSvg.appendChild(el("rect",{x:0,y:0,width:400,height:250,fill:"url(#skyGrad)",id:"skyRect"}));
+
+    var defs = el("defs",{});
+    var grad = el("linearGradient",{id:"skyGrad",x1:"0",y1:"0",x2:"0",y2:"1"});
+    grad.appendChild(el("stop",{offset:"0%",id:"skyStop0"}));
+    grad.appendChild(el("stop",{offset:"100%",id:"skyStop1"}));
+    defs.appendChild(grad);
+    var sunGrad = el("radialGradient",{id:"sunGrad"});
+    sunGrad.appendChild(el("stop",{offset:"0%","stop-color":"#fff6d8"}));
+    sunGrad.appendChild(el("stop",{offset:"55%","stop-color":"#ffd166"}));
+    sunGrad.appendChild(el("stop",{offset:"100%","stop-color":"#ffd166","stop-opacity":"0"}));
+    defs.appendChild(sunGrad);
+    sceneSvg.appendChild(defs);
+
+    sceneSvg.appendChild(el("circle",{cx:200,cy:210,r:150,fill:"url(#sunGrad)",id:"sunGlow"}));
+    sceneSvg.appendChild(el("circle",{cx:200,cy:210,r:22,fill:"#ffe9a8",id:"sunCore"}));
+
+    sceneSvg.appendChild(el("rect",{x:0,y:214,width:400,height:36,fill:"#03040a"}));
+
+    var windowIndex = 0;
+    buildingDefs.forEach(function(b){
+      var by = 214 - b.h;
+      sceneSvg.appendChild(el("rect",{x:b.x,y:by,width:b.w,height:b.h,fill:"#0a0e19",stroke:"rgba(185,194,214,0.15)","stroke-width":"1"}));
+      for(var i=0;i<b.windows;i++){
+        var wx = b.x + 6 + (i % 2) * (b.w - 16);
+        var wy = by + 10 + Math.floor(i/2) * 20;
+        var win = el("rect",{x:wx,y:wy,width:9,height:11,rx:1,fill:"#1a2338",id:"win-"+windowIndex});
+        sceneSvg.appendChild(win);
+        windowIndex++;
+      }
+    });
+  }
+  buildScene();
+
+  function renderScene(){
+    var idx = currentStageIndex();
+    var n = STAGES[idx].n;
+    var sky = STAGE_SKY[n] || STAGE_SKY[8];
+    document.getElementById("skyStop0").setAttribute("stop-color", sky[0]);
+    document.getElementById("skyStop1").setAttribute("stop-color", sky[1]);
+
+    var next = nextStageInfo();
+    var span = next ? (next.threshold - STAGES[idx].threshold) : 1;
+    var into = next ? Math.min(run.lifetime - STAGES[idx].threshold, span) : 0;
+    var progress = (idx + (span ? into/span : 0)) / (STAGES.length - 1);
+    if(!next) progress = 1;
+
+    var sunY = 210 - progress * 150;
+    var sunX = 60 + progress * 280;
+    document.getElementById("sunGlow").setAttribute("cy", sunY);
+    document.getElementById("sunGlow").setAttribute("cx", sunX);
+    document.getElementById("sunCore").setAttribute("cy", sunY);
+    document.getElementById("sunCore").setAttribute("cx", sunX);
+    document.getElementById("sunGlow").setAttribute("opacity", 0.35 + progress*0.55);
+
+    var litCount = Math.round(progress * totalWindows);
+    for(var i=0;i<totalWindows;i++){
+      var w = document.getElementById("win-"+i);
+      if(!w) continue;
+      w.setAttribute("fill", i < litCount ? "#f2a93b" : "#1a2338");
+    }
+  }
+
+  /* ---------------- shop ---------------- */
+  var itemListEl = document.getElementById("itemList");
+  var ICONS = [
+    '<path d="M4 4h9v9H4z" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M4 8h9M8.5 4v9" stroke="currentColor" stroke-width="1"/>',
+    '<rect x="6" y="3" width="9" height="15" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M9.5 3v-1.4h2v1.4" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M9 9l1.6 3h-1l1.4 3" stroke="currentColor" stroke-width="1.2" fill="none"/>',
+    '<rect x="2" y="10" width="16" height="7" rx="1" fill="none" stroke="currentColor" stroke-width="1.3"/><rect x="5" y="4" width="10" height="7" rx="1" fill="none" stroke="currentColor" stroke-width="1.3"/>',
+    '<path d="M3 10l7-6 7 6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 9v7h10V9" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M9.5 12l-1.6 2.4h1.8l-1.6 2.4" stroke="currentColor" stroke-width="1.1" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
+  ];
+
+  function renderShop(){
+    itemListEl.querySelectorAll(".item").forEach(function(row){
+      var id = row.getAttribute("data-id");
+      var b = BUILDINGS.filter(function(x){return x.id===id;})[0];
+      var cost = buildingCost(b);
+      var afford = run.energy >= cost && run.running;
+      row.classList.toggle("affordable", afford);
+      row.classList.toggle("locked", !run.running);
+      row.querySelector(".item-owned").textContent = owned[id];
+      row.querySelector(".buy-btn").disabled = !afford;
+      row.querySelector(".cost").textContent = formatNum(cost);
+    });
+  }
+
+  function buildShop(){
+    BUILDINGS.forEach(function(b, bi){
+      var row = document.createElement("div");
+      row.className = "item locked";
+      row.setAttribute("data-id", b.id);
+      row.innerHTML =
+        '<div class="item-icon"><svg viewBox="0 0 20 20" style="color:var(--gold-bright)">'+ICONS[bi]+'</svg></div>'+
+        '<div class="item-body">'+
+          '<div class="item-name-row"><span class="item-name">'+b.name+'</span><span class="item-owned">0</span></div>'+
+          '<div class="item-blurb">'+b.blurb+'</div>'+
+          '<div class="item-cps">+'+b.cps+' kWh/s each</div>'+
+        '</div>'+
+        '<button class="buy-btn" type="button"><span class="cost num"></span><span>kWh</span></button>';
+      row.querySelector(".buy-btn").addEventListener("click", function(){ buy(b.id); });
+      itemListEl.appendChild(row);
+    });
+    renderShop();
+  }
+  buildShop();
+
+  /* ---------------- header / combo rendering ---------------- */
+  function renderHeader(){
+    var idx = currentStageIndex();
+    var stage = STAGES[idx];
+    var dot = document.getElementById("stageDot");
+    var label = document.getElementById("stageLabel");
+    var pill = document.getElementById("stagePill");
+
+    var color, bg;
+    if(stage.n === 0){
+      label.textContent = "STAGE 0 · GRID STABLE";
+      color = "var(--circuit)"; bg = "rgba(53,214,196,0.14)";
+    } else if(stage.n >= 6){
+      label.textContent = "STAGE " + stage.n;
+      color = "var(--alert)"; bg = "rgba(232,84,62,0.14)";
+    } else {
+      label.textContent = "STAGE " + stage.n;
+      color = "var(--gold-bright)"; bg = "rgba(242,169,59,0.14)";
+    }
+    pill.style.color = color; pill.style.background = bg; pill.style.borderColor = color;
+    dot.style.background = color;
+
+    var timeVal = document.getElementById("timeVal");
+    timeVal.textContent = formatTime(run.timeLeft);
+    timeVal.classList.toggle("hot", run.timeLeft <= 10 && run.running);
+
+    var mult = currentMultiplier();
+    document.getElementById("comboVal").textContent = "×" + mult.toFixed(1);
+    document.getElementById("balVal").textContent = formatNum(run.energy);
+
+    var next = nextStageInfo();
+    var fill = document.getElementById("stageProgress");
+    var ptext = document.getElementById("progressText");
+    if(next){
+      var span = next.threshold - stage.threshold;
+      var into = run.lifetime - stage.threshold;
+      fill.style.width = Math.min(100, (into/span)*100) + "%";
+      ptext.textContent = formatNum(run.lifetime) + " / " + formatNum(next.threshold) + " kWh to Stage " + next.n;
+    } else {
+      fill.style.width = "100%";
+      ptext.textContent = formatNum(run.lifetime) + " kWh · Stage 0 reached";
+    }
+  }
+
+  function renderCombo(){
+    var mult = currentMultiplier();
+    var pct = (run.heat/HEAT_MAX)*100;
+    var heatFill = document.getElementById("heatFill");
+    heatFill.style.width = pct + "%";
+    var comboDisplay = document.getElementById("comboMultDisplay");
+    comboDisplay.textContent = "×" + mult.toFixed(1);
+    comboDisplay.classList.toggle("max", run.heat >= HEAT_MAX - 0.5);
+    document.getElementById("tapsStat").textContent = run.taps + " taps";
+    document.getElementById("bestComboStat").textContent = "best ×" + run.bestCombo.toFixed(1);
+    document.querySelector(".scene").classList.toggle("overdrive", run.heat >= HEAT_MAX - 0.5 && run.running);
+  }
+
+  function renderAll(){
+    renderHeader();
+    renderScene();
+    renderShop();
+    renderCombo();
+  }
+
+  /* ---------------- start / round lifecycle ---------------- */
+  var startVeil = document.getElementById("startVeil");
+  var mainCta = document.getElementById("mainCta");
+  var bottomBar = document.getElementById("bottomBar");
+
+  function refreshBestLine(){
+    var bl = document.getElementById("bestLine");
+    if(meta.personalBest){
+      bl.textContent = meta.personalBest.reachedZero
+        ? "Your best: Stage Zero in " + meta.personalBest.timeUsed + "s"
+        : "Your best: Stage " + meta.personalBest.stage + " (" + formatNum(meta.personalBest.lifetime) + " kWh)";
+    } else {
+      bl.textContent = "No runs yet — you'll set the bar.";
+    }
+  }
+
+  function showStart(){
+    startVeil.classList.remove("hidden");
+    document.getElementById("startHeadline").textContent = "Stage 8 to Stage Zero";
+    document.getElementById("startBtn").textContent = "▶ Start the surge";
+    refreshBestLine();
+    mainCta.textContent = "▶ Start the surge";
+    bottomBar.classList.remove("hidden");
+  }
+
+  function startRun(){
+    resetRun();
+    run.running = true;
+    startVeil.classList.add("hidden");
+    bottomBar.classList.add("hidden");
+    renderAll();
+  }
+
+  document.getElementById("startBtn").addEventListener("click", startRun);
+  mainCta.addEventListener("click", function(){
+    if(!run.running) startRun();
+  });
+
+  var tickHandle = setInterval(function(){
+    if(!run.running) return;
+    var dt = 0.1;
+    run.timeLeft -= dt;
+    run.heat = Math.max(0, run.heat - heatDecayRate()*dt);
+    var gain = totalCps() * dt;
+    if(gain > 0){ run.energy += gain; run.lifetime += gain; }
+    checkStageProgress();
+    if(run.timeLeft <= 0 && !run.reachedZero){
+      run.timeLeft = 0;
+      endRun(false);
+    }
+    renderAll();
+  }, 100);
+
+  function checkStageProgress(){
+    var idx = currentStageIndex();
+    var n = STAGES[idx].n;
+    if(n < MAX_STAGE_N && !run.seenStages[n]){
+      run.seenStages[n] = true;
+      if(n === 0){
+        run.reachedZero = true;
+        run.timeUsedAtZero = Math.round(ROUND_SECONDS - run.timeLeft);
+        endRun(true);
+      } else {
+        toast("<strong>Stage " + n + "</strong> — " + FACTS[n]);
+      }
+    }
+  }
+
+  function endRun(zero){
+    if(run.ended) return;
+    run.ended = true;
+    run.running = false;
+    run.canSubmit = true;
+
+    var stageIdx = currentStageIndex();
+    var stageN = STAGES[stageIdx].n;
+    var best = { reachedZero: zero, timeUsed: zero ? run.timeUsedAtZero : ROUND_SECONDS, lifetime: Math.round(run.lifetime), stage: stageN, taps: run.taps, bestCombo: run.bestCombo };
+    if(!meta.personalBest || betterThan(best, meta.personalBest)){
+      meta.personalBest = best;
+      saveMeta();
+    }
+
+    document.getElementById("resultEmoji").textContent = zero ? "🎆" : "⏱️";
+    document.getElementById("resultTitle").textContent = zero ? ("Stage Zero in " + best.timeUsed + "s!") : ("Time's up — Stage " + stageN);
+    document.getElementById("resultBody").textContent = zero
+      ? "No load-shedding schedule, because there's nothing to shed. That's the whole idea."
+      : (FACTS[stageN] || "Close one — spend a little faster next time and Stage Zero is right there.");
+    document.getElementById("rvLifetime").textContent = formatNum(run.lifetime);
+    document.getElementById("rvCombo").textContent = "×" + run.bestCombo.toFixed(1);
+    document.getElementById("rvTaps").textContent = run.taps;
+    document.getElementById("rvStage").textContent = zero ? "0" : stageN;
+
+    setTimeout(function(){ openModal("resultOverlay"); }, zero ? 200 : 0);
+
+    mainCta.textContent = "▶ Play again";
+    bottomBar.classList.remove("hidden");
+    renderAll();
+  }
+  function betterThan(a, b){
+    if(a.reachedZero !== b.reachedZero) return a.reachedZero;
+    if(a.reachedZero) return a.timeUsed < b.timeUsed;
+    return a.lifetime > b.lifetime;
+  }
+
+  document.getElementById("resultAgain").addEventListener("click", function(){
+    closeModal("resultOverlay");
+    startRun();
+  });
+
+  /* ---------------- tap + buy ---------------- */
+  function spawnParticle(x, y, amount, mult){
+    var wrap = document.querySelector(".scene-wrap");
+    var p = document.createElement("div");
+    p.className = "particle";
+    p.style.fontSize = (0.85 + Math.min(mult/MAX_MULT, 1)*0.55) + "rem";
+    p.textContent = "+" + formatNum(amount);
+    p.style.left = x + "px";
+    p.style.top = y + "px";
+    wrap.appendChild(p);
+    setTimeout(function(){ p.remove(); }, 950);
+  }
+
+  document.getElementById("tapTarget").addEventListener("click", function(e){
+    if(!run.running) return;
+    var mult = currentMultiplier();
+    var v = baseTap() * mult;
+    run.energy += v; run.lifetime += v;
+    run.heat = Math.min(HEAT_MAX, run.heat + heatPerTap());
+    run.taps += 1;
+    if(mult > run.bestCombo) run.bestCombo = mult;
+
+    var rect = this.getBoundingClientRect();
+    var x = (e.clientX ? e.clientX - rect.left : rect.width/2);
+    var y = (e.clientY ? e.clientY - rect.top : rect.height/2);
+    spawnParticle(x, y, v, mult);
+    blip(520 + mult*22, 0.03 + Math.min(mult/MAX_MULT,1)*0.03);
+
+    renderAll();
+    checkStageProgress();
+  });
+  document.getElementById("tapTarget").addEventListener("keydown", function(e){
+    if(e.key === "Enter" || e.key === " "){ e.preventDefault(); this.click(); }
+  });
+
+  function buy(id){
+    if(!run.running) return;
+    var b = BUILDINGS.filter(function(x){return x.id===id;})[0];
+    var cost = buildingCost(b);
+    if(run.energy < cost) return;
+    run.energy -= cost;
+    owned[id] += 1;
+    blip(760, 0.035);
+    renderAll();
+  }
+
+  /* ---------------- leaderboard ---------------- */
+  var LOCAL_LB_KEY = "loadbreaker-local-leaderboard";
+  var leaderboard = [];
+  try{ leaderboard = JSON.parse(document.getElementById("leaderboard-data").textContent) || []; }catch(e){ leaderboard = []; }
+  if(!window.claude){
+    // No Claude artifact runtime on this host (e.g. the standalone QA deploy) —
+    // there's no shared backend, so fall back to a per-device board instead of
+    // silently discarding every submission.
+    try{
+      var localLB = JSON.parse(localStorage.getItem(LOCAL_LB_KEY) || "null");
+      if(localLB) leaderboard = localLB;
+    }catch(e){}
+  }
+
+  function lbCompare(a,b){
+    if(a.reachedZero !== b.reachedZero) return a.reachedZero ? -1 : 1;
+    if(a.reachedZero) return a.timeUsed - b.timeUsed;
+    return b.lifetime - a.lifetime;
+  }
+
+  function renderLeaderboard(){
+    var list = document.getElementById("lbList");
+    list.innerHTML = "";
+    if(!leaderboard.length){
+      list.innerHTML = '<div class="lb-empty">No runs submitted yet. Be the first on the grid.</div>';
+    } else {
+      leaderboard.slice(0,15).forEach(function(entry, i){
+        var row = document.createElement("div");
+        row.className = "lb-row";
+        var scoreText = entry.reachedZero
+          ? ("Stage Zero in " + entry.timeUsed + "s")
+          : ("Stage " + entry.stage + " · " + formatNum(entry.lifetime) + " kWh");
+        row.innerHTML =
+          '<span class="lb-rank'+(i<3?' top':'')+'">'+(i+1)+'</span>'+
+          '<span class="lb-initials">'+entry.initials+'</span>'+
+          '<span class="lb-score">'+scoreText+'</span>';
+        list.appendChild(row);
+      });
+    }
+    document.getElementById("lbSubmitRow").style.display = run.canSubmit ? "block" : "none";
+  }
+
+  document.getElementById("lbBtn").addEventListener("click", function(){
+    renderLeaderboard();
+    openModal("lbOverlay");
+  });
+  document.getElementById("resultToLeaderboard").addEventListener("click", function(){
+    closeModal("resultOverlay");
+    renderLeaderboard();
+    openModal("lbOverlay");
+    document.getElementById("lbSubmitForm").style.display = "block";
+    document.getElementById("initialsInput").focus();
+  });
+  document.getElementById("lbSubmitBtn").addEventListener("click", function(){
+    document.getElementById("lbSubmitForm").style.display = "block";
+    document.getElementById("initialsInput").focus();
+  });
+
+  document.getElementById("lbConfirmBtn").addEventListener("click", function(){
+    var input = document.getElementById("initialsInput");
+    var initials = (input.value || "").toUpperCase().replace(/[^A-Z]/g,"").slice(0,3);
+    if(initials.length < 2){ input.style.borderColor = "var(--alert)"; return; }
+    submitScore(initials);
+  });
+
+  function submitScore(initials){
+    var entry = {
+      initials: initials,
+      reachedZero: run.reachedZero,
+      timeUsed: run.reachedZero ? run.timeUsedAtZero : ROUND_SECONDS,
+      lifetime: Math.round(run.lifetime),
+      stage: STAGES[currentStageIndex()].n,
+      ts: Date.now()
+    };
+    var newBoard = leaderboard.concat([entry]).sort(lbCompare).slice(0, 20);
+
+    run.canSubmit = false;
+    document.getElementById("lbSubmitForm").style.display = "none";
+    document.getElementById("lbSubmitRow").style.display = "none";
+    toast("Submitted! Publishing to the shared leaderboard…");
+
+    publishLeaderboard(newBoard).then(function(ok){
+      if(ok){
+        leaderboard = newBoard;
+        renderLeaderboard();
+        toast("You're on the board.");
+      }
+    });
+  }
+
+  function publishLeaderboard(newBoard){
+    return claudeReady.then(function(artifact){
+      if(!artifact){
+        try{ localStorage.setItem(LOCAL_LB_KEY, JSON.stringify(newBoard)); }catch(e){}
+        toast("No shared leaderboard on this deployment — saved to this device only.");
+        return true;
+      }
+      return fetch(location.href, {cache:"no-store"}).then(function(res){ return res.text(); }).then(function(src){
+        var newJson = JSON.stringify(newBoard);
+        var updated = src.replace(
+          /(<script id="leaderboard-data" type="application\/json">)[\s\S]*?(<\/script>)/,
+          function(m, open, close){ return open + newJson + close; }
+        );
+        return artifact.publish(updated).then(function(){ return true; });
+      }).catch(function(err){
+        if(err && err.code === "conflict"){ toast("Someone else just updated the board — reloading."); setTimeout(function(){ location.reload(); }, 900); }
+        else if(err && (err.code === "not_writer" || err.code === "not_granted")){ toast("This view can't write the shared leaderboard, but your run is saved locally."); }
+        else { toast("Couldn't reach the shared leaderboard right now."); }
+        return false;
+      });
+    });
+  }
+
+  /* ---------------- lead capture ---------------- */
+  var selectedBill = null;
+  document.querySelectorAll("#billSeg button").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      document.querySelectorAll("#billSeg button").forEach(function(b){ b.classList.remove("selected"); });
+      btn.classList.add("selected");
+      selectedBill = btn.getAttribute("data-val");
+    });
+  });
+
+  function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+
+  document.getElementById("leadBtn").addEventListener("click", function(){ openModal("leadOverlay"); });
+  document.getElementById("resultToLead").addEventListener("click", function(){ closeModal("resultOverlay"); openModal("leadOverlay"); });
+
+  document.getElementById("leadSubmitBtn").addEventListener("click", function(){
+    var name = document.getElementById("leadName").value.trim();
+    var email = document.getElementById("leadEmail").value.trim();
+    var suburb = document.getElementById("leadSuburb").value.trim();
+    var nameField = document.getElementById("nameField");
+    var emailField = document.getElementById("emailField");
+    nameField.classList.toggle("error", !name);
+    emailField.classList.toggle("error", !validEmail(email));
+    nameField.querySelector(".field-error").textContent = name ? "" : "Tell us who's asking.";
+    emailField.querySelector(".field-error").textContent = validEmail(email) ? "" : "Needs a valid email address.";
+    if(!name || !validEmail(email)) return;
+
+    var lead = {name:name, email:email, suburb:suburb || "your area", bill: selectedBill || "not specified", ts: Date.now()};
+    try{
+      var leads = JSON.parse(localStorage.getItem(LEADS_KEY) || "[]");
+      leads.push(lead);
+      localStorage.setItem(LEADS_KEY, JSON.stringify(leads));
+    }catch(e){}
+    meta.leadDone = true; saveMeta();
+
+    document.getElementById("leadFormWrap").style.display = "none";
+    document.getElementById("leadConfirmWrap").style.display = "block";
+    document.getElementById("leadThanksName").textContent = " " + name.split(" ")[0];
+    document.getElementById("leadThanksSuburb").textContent = suburb || "your area";
+
+    var stageLabel = run.reachedZero ? ("Stage Zero in " + run.timeUsedAtZero + "s") : ("Stage " + STAGES[currentStageIndex()].n);
+    var snapshot =
+      "LOADBREAKER — RUN SNAPSHOT\n" +
+      "----------------------------\n" +
+      "Result:          " + stageLabel + "\n" +
+      "Energy generated: " + formatNum(run.lifetime) + " kWh\n" +
+      "Best combo:      ×" + run.bestCombo.toFixed(1) + "\n" +
+      "Taps:            " + run.taps + "\n" +
+      "----------------------------\n" +
+      "Estimate requested for: " + (suburb || "your area") + "\n" +
+      "Typical bill band: " + (selectedBill || "not specified") + "\n" +
+      "A Stage Zero advisor will follow up by email.";
+    document.getElementById("leadSnapshot").textContent = snapshot;
+    window._lastSnapshot = snapshot;
+  });
+
+  document.getElementById("leadDownloadBtn").addEventListener("click", function(){
+    downloadsReady.then(function(downloads){
+      if(!downloads){
+        // No Claude artifact runtime — do a plain browser download instead.
+        try{
+          var blob = new Blob([window._lastSnapshot || ""], {type:"text/plain"});
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement("a");
+          a.href = url; a.download = "loadbreaker-snapshot.txt";
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+          toast("Saved.");
+        }catch(e){ toast("Couldn't save the file right now."); }
+        return;
+      }
+      downloads.save({filename:"loadbreaker-snapshot.txt", data: window._lastSnapshot || ""})
+        .then(function(){ toast("Saved."); })
+        .catch(function(err){
+          if(err && err.code === "declined") return;
+          toast("Couldn't save the file right now.");
+        });
+    });
+  });
+
+  /* ---------------- share ---------------- */
+  document.getElementById("shareBtn").addEventListener("click", function(){
+    var text;
+    if(run.ended){
+      text = run.reachedZero
+        ? ("I hit Stage Zero in " + run.timeUsedAtZero + "s in Loadbreaker ⚡ Think you can beat that?")
+        : ("I got my grid to Stage " + STAGES[currentStageIndex()].n + " in 60 seconds on Loadbreaker ⚡ Can you reach Stage Zero?");
+    } else {
+      text = "Loadbreaker: a 60-second sprint to Stage Zero. Tap fast, build your grid, beat the clock ⚡";
+    }
+    if(navigator.share){
+      navigator.share({title:"Loadbreaker", text:text, url: location.href}).catch(function(){});
+    } else {
+      var full = text + " " + location.href;
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(full).then(function(){ toast("Copied — paste it anywhere."); }).catch(function(){ toast(full); });
+      } else {
+        toast(full, 6000);
+      }
+    }
+  });
+
+  /* ---------------- menu ---------------- */
+  document.getElementById("menuBtn").addEventListener("click", function(){ openModal("menuOverlay"); });
+  document.getElementById("resetBtn").addEventListener("click", function(){
+    if(!confirm("Clear your personal best and saved details on this device?")) return;
+    try{ localStorage.removeItem(META_KEY); localStorage.removeItem(LEADS_KEY); }catch(e){}
+    location.reload();
+  });
+
+  /* ---------------- claude capabilities ---------------- */
+  var claudeReady = (window.claude ? window.claude.use("artifact") : Promise.resolve(null)).catch(function(){ return null; });
+  var downloadsReady = (window.claude ? window.claude.use("downloads") : Promise.resolve(null)).catch(function(){ return null; });
+
+  /* ---------------- init ---------------- */
+  loadMeta();
+  document.getElementById("soundBtn").textContent = meta.muted ? "🔇" : "🔊";
+  renderAll();
+  showStart();
+
+})();
+</script>
+</body>
+</html>
