@@ -9,7 +9,7 @@
 
 image:
   repository: harbor.qa.stagezero.co.za/library/sz-loadbreaker-game
-  tag: "manual"
+  tag: "mobile-fix"
   pullPolicy: Always
 
 # Pull credentials for Harbor.
