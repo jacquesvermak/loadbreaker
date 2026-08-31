@@ -63,15 +63,32 @@ balance — spending doesn't undo stage progress.
 | --- | --- | --- | --- |
 | ☀️ Solar Panel | 4 (×1.13/unit) | +0.4 kWh/s | Baseline generation. |
 | 🔋 Battery | 60 (×1.13/unit) | +2.5 kWh/s | +2.5 heat per tap — charges your combo faster. |
-| 🔋 Battery Backup | 900 (×1.13/unit) | +25 kWh/s | Slows combo-heat decay ~10% per unit (floored). |
-| 🏠 Fixed Backup System | 3,000 (×1.13/unit) | +90 kWh/s | +2 flat energy on every tap, on top of the combo multiplier. |
+| 🏠 Fixed Backup — Essentials | 1,200 (×1.13/unit) | +25 kWh/s | +1 flat energy/tap, decay ×0.92/unit. |
+| 🏠 Fixed Backup — Standard | 1,600 (×1.13/unit) | +50 kWh/s | +2 flat energy/tap, decay ×0.87/unit. |
+| 🏠 Fixed Backup — Premium | 2,200 (×1.13/unit) | +85 kWh/s | +3 flat energy/tap, decay ×0.82/unit. |
 
-Product names and their real-world roles (portable vs. fixed, battery vs.
-whole-home backup) come from Stage Zero's actual lineup — the specific costs,
-outputs and combo effects are tuned for a 60-second arcade loop, not a
-pricing calculator. Every product is a generic entry in one config array; the
-buy/render/combo logic loops over it, so adding a fifth tier is a one-line
-addition, not a refactor.
+The three Fixed Backup tiers are the one genuine multi-tier pricing table
+published on stagezero.co.za: **Essentials** (5kW inverter, 5kWh battery,
+~4h backup, R1,049/mo), **Standard** (8kW, 10kWh, ~7h, R1,399/mo), **Premium**
+(10kW, 15kWh, ~11h, R1,899/mo) — real specs and real Rand prices, shown in
+each card's blurb in-game. The in-game *cost* to buy a unit (in kWh, the
+game's currency) and its gameplay *effect* (output, tap bonus, combo-decay
+slowdown) are tuned for a 60-second arcade loop, not literal Rand-to-kWh
+conversions — but they scale in the same relative order as the real tiers
+(Standard costs ~33% more than Essentials in real life; here it's exactly
+that ratio). Every product is a generic entry in one config array carrying
+optional `heatBonus` / `tapBonus` / `decayMult` fields; `heatPerTap()`,
+`baseTap()` and `heatDecayRate()` all loop over the array rather than naming
+a product by id, so adding a sixth tier is a one-line addition, not a
+refactor.
+
+The lead-capture screen ("Get your real savings estimate") also cites the
+one worked example Stage Zero publishes for solar
+(stagezero.co.za/solar): a R3,500/mo bill drops to R823 grid + R1,099
+rental = R1,922 total spend, saving R1,578/month. It's shown as-is, not
+extrapolated into a formula for other bill sizes — Stage Zero's pricing is
+quote-based and this is the only static figure published, so the game
+doesn't invent precision the source doesn't have.
 
 ### Scoring & the leaderboard
 
