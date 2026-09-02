@@ -44,7 +44,6 @@ ingress:
   tlsSecret: qa-cert
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    external-dns.alpha.kubernetes.io/target: adf83b39cefd34af89605975a11674fb-747198726.af-south-1.elb.amazonaws.com
 
 healthCheck:
   path: /healthz
