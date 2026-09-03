@@ -9,7 +9,7 @@
 
 image:
   repository: harbor.qa.stagezero.co.za/library/sz-loadbreaker-game
-  tag: "real-pricing"
+  tag: "home-and-howtoplay"
   pullPolicy: Always
 
 # Pull credentials for Harbor.

@@ -280,6 +280,9 @@
   .overlay.is-open .modal{transform:translateY(0);}
   .modal h3{font-size:1.25rem;font-weight:900;margin-bottom:8px;}
   .modal p{font-size:0.85rem;line-height:1.5;color:var(--mist);margin:0 0 14px;}
+  .info-list{list-style:none;padding:0;margin:0 0 4px;display:flex;flex-direction:column;gap:10px;}
+  .info-list li{font-size:0.82rem;line-height:1.5;color:var(--mist);background:var(--dawn);border:1px solid var(--line);border-radius:10px;padding:10px 12px;}
+  .info-list li b{color:var(--gold-bright);}
   .modal .close-row{display:flex;justify-content:flex-end;margin-bottom:6px;}
   .modal-actions{display:flex;gap:8px;margin-top:12px;}
   .field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
@@ -349,7 +352,7 @@
         <button class="icon-btn" id="soundBtn" title="Toggle sound" aria-label="Toggle sound">🔊</button>
         <button class="icon-btn" id="shareBtn" title="Share" aria-label="Share">↗</button>
         <button class="icon-btn" id="lbBtn" title="Leaderboard" aria-label="Leaderboard">🏆</button>
-        <button class="icon-btn" id="menuBtn" title="More" aria-label="More options">⋯</button>
+        <button class="icon-btn" id="infoBtn" title="How to play" aria-label="How to play">ℹ️</button>
       </div>
     </div>
     <div class="stage-row">
@@ -412,6 +415,7 @@
     <div class="modal-actions"><button class="cta ghost" id="resultToLeaderboard" style="width:100%">Submit to the grid leaderboard 🏆</button></div>
     <div class="modal-actions"><button class="cta primary" id="resultToLead" style="width:100%">See what this looks like at home ⚡</button></div>
     <div class="modal-actions"><button class="cta ghost" id="resultAgain" style="width:100%">▶ Play again</button></div>
+    <div class="modal-actions"><button class="cta ghost" id="resultHome" style="width:100%">🏠 Back to home</button></div>
   </div>
 </div>
 
@@ -493,8 +497,15 @@ R3,500/mo bill → R823 grid + R1,099 rental = R1,922 total spend
 <div class="overlay" id="menuOverlay">
   <div class="modal">
     <div class="close-row"><button class="icon-btn" data-close="menuOverlay">✕</button></div>
-    <h3>Loadbreaker</h3>
-    <p>A concept prototype for the Stage Zero Game App Challenge. A 60-second, skill-based sprint to Stage Zero, a shared leaderboard, and a working lead-capture flow — ready to skin with real branding.</p>
+    <h3>How to Play</h3>
+    <ul class="info-list">
+      <li><b>Tap the grid to generate energy.</b> The faster and more consistently you tap, the hotter your combo meter runs — up to ×12 — and the more every tap is worth.</li>
+      <li><b>Spend energy on real Stage Zero products</b> (Solar Panel, Battery, and the Fixed Backup tiers) to add passive output between taps, boost your combo, or slow the heat decay.</li>
+      <li><b>You start at Stage 8</b> — South Africa's real load-shedding scale — and every kWh you generate pushes the stage down. Reach <b>Stage 0</b> before the clock runs out.</li>
+      <li><b>One 60-second run.</b> Crossing into each new stage pops a quick fact about what it actually means — reach Stage 0 before the clock runs out and the round ends early in celebration.</li>
+      <li><b>Submit your run</b> to the shared grid leaderboard (3-letter initials, arcade-style — no personal details), or see what your own roof could actually do via "Get my real savings estimate."</li>
+    </ul>
+    <div class="modal-actions"><button class="cta primary" data-close="menuOverlay" style="width:100%">Got it</button></div>
     <div class="modal-actions"><button class="muted-link" id="resetBtn">Clear my personal best &amp; saved details</button></div>
   </div>
 </div>
@@ -983,6 +994,14 @@ R3,500/mo bill → R823 grid + R1,099 rental = R1,922 total spend
     startRun();
   });
 
+  function goHome(){
+    closeModal("resultOverlay");
+    resetRun();
+    renderAll();
+    showStart();
+  }
+  document.getElementById("resultHome").addEventListener("click", goHome);
+
   /* ---------------- tap + buy ---------------- */
   function spawnParticle(x, y, amount, mult){
     var wrap = document.querySelector(".scene-wrap");
@@ -1245,7 +1264,7 @@ R3,500/mo bill → R823 grid + R1,099 rental = R1,922 total spend
   });
 
   /* ---------------- menu ---------------- */
-  document.getElementById("menuBtn").addEventListener("click", function(){ openModal("menuOverlay"); });
+  document.getElementById("infoBtn").addEventListener("click", function(){ openModal("menuOverlay"); });
   document.getElementById("resetBtn").addEventListener("click", function(){
     if(!confirm("Clear your personal best and saved details on this device?")) return;
     try{ localStorage.removeItem(META_KEY); localStorage.removeItem(LEADS_KEY); }catch(e){}
